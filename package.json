@@ -2,7 +2,7 @@
 	"name": "vscomp",
 	"displayName": "VscOMP",
 	"description": "VscOMP - AI powered assistant to help you parallelize your code.",
-	"version": "0.23.0",
+	"version": "0.2.0",
 	"publisher": "VscOMP",
 	"license": "MIT",
 	"authors": [
