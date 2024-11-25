@@ -21,7 +21,6 @@ export const AiProvider = ({
 	ollama,
 	openai,
 	ollamaModels,
-	interactionSettings,
 }: InitSettings) => {
 	const [currentAiProvider, setAiProvider] = useState(aiProvider);
 	const [ollamaSettings, setOllamaSettings] = useState(
@@ -75,18 +74,6 @@ export const AiProvider = ({
 		}
 	};
 
-	const [currentInteractions, setInteractions] = useState(interactionSettings);
-
-	const handleChange = (e: any) => {
-		const number = Number(e.target.value);
-		if (!number) { return; }
-		const field = e.target.getAttribute("data-name");
-		const clone = { ...currentInteractions };
-		//@ts-ignore
-		clone[field] = number;
-		setInteractions(clone);
-	};
-
 	return (
 		<Container>
 			<DropDownContainer>
@@ -102,15 +89,6 @@ export const AiProvider = ({
 					))}
 				</VSCodeDropdown>
 			</DropDownContainer>
-			
-			<VSCodeTextField
-				title={"Adjust the context window size to determine the amount of context included in chat request. Set the value to -1 to disable."}
-				data-name="chatContextWindow"
-				value={currentInteractions.chatContextWindow.toString()}
-				onChange={handleChange}
-			>
-				Chat Context Window
-			</VSCodeTextField>
 
 			<VSCodeDivider />
 			{currentAiProvider === "Ollama" && (

@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import { eventEmitter } from "../events/eventEmitter";
 import { AIProvider } from "../service/base";
 import { AppMessage, ChatMessage } from "../types/Message";
-import { InteractionSettings } from "../types/Settings";
 import { loggingProvider } from "./loggingProvider";
 import { check } from "./parser";
 const Parser = require("web-tree-sitter")
@@ -16,8 +15,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
 	constructor(
 		private readonly _aiProvider: AIProvider,
-		private readonly _context: vscode.ExtensionContext,
-		private readonly _interactionSettings: InteractionSettings
+		private readonly _context: vscode.ExtensionContext
 	) {}
 
 	dispose() {

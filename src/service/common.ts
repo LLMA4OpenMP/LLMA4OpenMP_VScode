@@ -34,12 +34,20 @@ for(i = 0; i < N; i++) {
     }
 }
 
-//nested loops 2
-//In this case the outer loop has no dependency, but the inner loop has, so just parallelize the outer loop will be fine.
-#pragma omp parallel for private(j)
+// nested loops 2
+// Parallelizing the i and j loops using collapse(2) to combine them into a larger loop for parallel execution.
+// private(k, l) ensures each thread gets its own copy of k and l to avoid conflicts in the inner loops.
+// private(var_1) makes sure each thread has its own copy of var_1. It's set inside the j loop (var_1 = j) and doesn't need to be shared across threads.
+// reduction(+: var_2) ensures var_2 is updated safely across threads. Each thread gets a private copy, and after execution, the values are accumulated.
+#pragma omp parallel for collapse(2) private(var_1, k, l) reduction(+: var_2)
 for(i = 0; i < N; i++) {
-    for(j = 0; j < N; j++) {
-    	x[i][j] = x[i][j + 1] + 10;
+    for(j = 0; j < M; j++) {
+        var_1 = j;
+        for(k = 0; k < Y; k++) {
+            for(int l = 0; l < Z; l++) {
+                var_2 += var_1;
+            }
+        }
     }
 }
 *****experience: nested loops*****

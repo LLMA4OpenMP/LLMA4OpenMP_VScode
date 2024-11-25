@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
 import { asyncIterator } from "../asyncIterator";
-import { AIProvider, GetInteractionSettings } from "../base";
+import { AIProvider } from "../base";
 import {
-	InteractionSettings,
 	Settings,
 	defaultMaxTokens,
 } from "../../types/Settings";
@@ -21,7 +20,6 @@ export class OpenAI implements AIProvider {
 	settings: Settings["openai"];
 	chatHistory: OpenAIMessages[] = [];
 	chatModel: OpenAIModel | undefined;
-	interactionSettings: InteractionSettings | undefined;
 
 	constructor() {
 		const config = vscode.workspace.getConfiguration("VscOMP");
@@ -38,8 +36,6 @@ export class OpenAI implements AIProvider {
 		}
 
 		this.settings = openaiConfig;
-
-		this.interactionSettings = GetInteractionSettings();
 	}
 
 	private handleError(message: string) {

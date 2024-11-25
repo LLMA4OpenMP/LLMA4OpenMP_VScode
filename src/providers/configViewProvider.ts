@@ -1,9 +1,7 @@
 import * as vscode from "vscode";
-import { GetInteractionSettings } from "../service/base";
 import { AppMessage } from "../types/Message";
 import {
 	ApiSettingsType,
-	InteractionSettings,
 	OllamaSettingsType,
 	Settings,
 } from "../types/Settings";
@@ -64,7 +62,6 @@ export class ConfigViewProvider implements vscode.WebviewViewProvider {
 			aiProvider:
 				this._config.get<Settings["aiProvider"]>("Provider") ??
 				"Ollama",
-			interactionSettings: GetInteractionSettings(),
 			ollama: this._config.get<Settings["ollama"]>("Ollama"),
 			openai: this._config.get<Settings["openai"]>("OpenAI"),
 		} satisfies Settings;
@@ -120,14 +117,6 @@ export class ConfigViewProvider implements vscode.WebviewViewProvider {
 			this._config.update("Provider", "OpenAI");
 		}
 		this._config.update("OpenAI", value);
-	};
-
-	private changeInteractions = (value: unknown) => {
-		const updated = {
-			...GetInteractionSettings(),
-			...(value as InteractionSettings),
-		};
-		this._config.update("InteractionSettings", updated);
 	};
 
 	private _getHtml = (webview: vscode.Webview) => {

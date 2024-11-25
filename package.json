@@ -2,7 +2,7 @@
 	"name": "vscomp",
 	"displayName": "VscOMP",
 	"description": "VscOMP - AI powered assistant to help you parallelize your code.",
-	"version": "0.1.0",
+	"version": "0.23.0",
 	"publisher": "VscOMP",
 	"license": "MIT",
 	"authors": [
@@ -232,15 +232,15 @@
 		"react-syntax-highlighter": "15.5.0",
 		"styled-components": "6.1.1",
 		"tar": "6.2.0",
-		"typescript": "5.3.2",
-		"vite": "5.3.1",
-		"vite-plugin-static-copy": "^1.0.5",
 		"tree-sitter-c": "^0.21.4",
 		"tree-sitter-cli": "^0.22.6",
 		"tree-sitter-cpp": "^0.22.2",
-		"ts-node": "^10.9.2"
+		"ts-node": "^10.9.2",
+		"typescript": "5.3.2",
+		"vite": "5.3.1",
+		"vite-plugin-static-copy": "^1.0.5"
 	},
-	"Dependencies": {
+	"dependencies": {
 		"jsonc-parser": "^3.2.1",
 		"web-tree-sitter": "^0.22.6"
 	}
