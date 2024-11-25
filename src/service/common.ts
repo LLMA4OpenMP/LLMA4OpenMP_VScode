@@ -8,7 +8,7 @@ If it is a coding question and no language was provided default to using Typescr
 export const commonParallelizePrompt = `You are ParallelGPT, an autonomous agent specialized in parallel computing that assists developers in optimizing their code by parallelizing C programs using OpenMP.
 Be cautious and careful, always try to understand the code and make sure all your modification will not creat any data-race conditions.
 Your decisions must always be made independently without seeking user assistance.
-You might be given some parallelizing experiences. Refer to those experiences to make the right decision.
+You might be given some parallelizing experiences, refer to those experiences and analyze every variable to make the right decision.
 If you think the loop is parallelizable, return the exact same loop with the correct modification, do not create anything else (like a declearation expression or a comment). If you think the loop is not parallelizable, return the exact same loop with your comment on why it is not parallelizable.
 Your reply must contain and only contain these 3 parts below:
 Analysis of the code
@@ -18,28 +18,34 @@ Explaination (keep it brief, do not put common sense like what is openmp here)
 
 export const nestedPrompt = ` 
 *****experience: nested loops*****
-//if you see nested loops, there are a few things you should consider.
-
 //nested loops 1
 //this loop has 3 layer, and all 3 layers have no data dependency between iterations, thus all 3 layer is parallelizable. In this case, you should parallelize the outer-most parallelizable layer, the i-layer. 
-//Don't forget to add private to the loop index which are inside the i-loop, in this case j and k.
+//Don't forget to privatize the loop's index which are inside the i-loop, in this case j and k.
 //you should pay extra attention to the array variables in the inner loop, like the "h[]" array in this loop, it only contains subscript "k", so if you parallelize the outer-most loop, the h[k] might be access at the same time by different threads, for example thread1: i=1,j=1,k=5,thread2:i=4;j=2,k=5. thread 1 and 2 are accessing h[5] at the same time, so you need to use reduction to avoid data race.
-#pragma omp parallel for private(j, k) reduction(+: h[:N])
-for(i = 0; i < N; i++) {
-    for(j = 0; j < N; j++) {
+#pragma omp parallel for private(j, k) private(a) reduction(+: h[:N])
+for(i = 0; i < 100; i++) {
+    for(j = 0; j < 1000; j++) {
         for(k = 0; k < N; k++) {
             a = b + x;
-            h[k] = h[k] + i;
+            h[k] = h[k] + a;
         }
     }
 }
 
 //nested loops 2
-//In this case the outer loop has no dependency, but the inner loop has, so just parallelize the outer loop will be fine.
-#pragma omp parallel for private(j)
-for(i = 0; i < N; i++) {
-    for(j = 0; j < N; j++) {
-    	x[i][j] = x[i][j + 1] + 10;
+//this loop can also be paralleized using collapse, because its iteration space is rectangular. You must avoid using collapse when loops do not form a perfectly nested rectangular iteration space (e.g., inner bounds depend on outer variables) or have dependencies/interleaved code.
+//since collapse() automatically privatize loop indexes, you can replace private(j, k) with collapse(3), because collapse(3) covers 3 loops, i, j, and k, thus i, j, and k are privatized
+//moreover, you don't have to collapse all the loops, collapse(2) is also viable. But becareful, if you DO NOT choose to collapse ALL LOOPS, the remaining loop's index must be explicitly privatized to avoid concurrent writes to the loop index between iterations.
+//so all these three pragmas are correct 
+#pragma omp parallel for collapse(3) private(a) reduction(+: h[:N]) //collapse(3) covers i j k, no privatization needed
+#pragma omp parallel for collapse(2) private(k) private(a) reduction(+: h[:N]) //collapse(2) covers i j, so private(k) is needed
+#pragma omp parallel for private(j, k) private(a) reduction(+: h[:N]) //no collapse, so private(j, k) is needed
+for(i = 0; i < 100; i++) {
+    for(j = 0; j < 1000; j++) {
+        for(k = 0; k < N; k++) {
+            a = b + x;
+            h[k] = h[k] + a;
+        }
     }
 }
 *****experience: nested loops*****
@@ -55,16 +61,16 @@ double result = 0.0;
 double step = 0.1;
 double xx;
 /*
-   	1. private(xx) is used here because in the first line xx is assigned to a value. Then, xx is used in "a = xx + yy + b", so private(xx) is a must. 
+    1. private(xx) is used here because in the first line xx is assigned to a value. Then, xx is used in "a = xx + yy + b", so xx is a temporary variable, private(xx) is a must. 
     2. there is no private(yy) here because if a variable is declared inside the loop, it is already privte to each threads, you should not privatize it again, it will cause error
 */
 #pragma omp parallel for private(xx)
-for(i = 0; i < num_steps; i++)
+for(i = 0; i < N; i++)
 {
     double yy;
     yy = m + n;
-    xx = (i + 0.5) * step;
-    a = xx + yy + b;
+    xx = (i + 0.5) * step; // xx is write here
+    a = xx + yy + b; // xx is read here, read after write, xx is a temporary variable, must be privatized
 }
 *****experience: private variables*****
  

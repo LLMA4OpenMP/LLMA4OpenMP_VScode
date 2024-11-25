@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import { eventEmitter } from "../events/eventEmitter";
 import { AIProvider } from "../service/base";
 import { AppMessage, ChatMessage } from "../types/Message";
-import { InteractionSettings } from "../types/Settings";
 import { loggingProvider } from "./loggingProvider";
 import { check } from "./parser";
 const Parser = require("web-tree-sitter")
@@ -16,8 +15,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
 	constructor(
 		private readonly _aiProvider: AIProvider,
-		private readonly _context: vscode.ExtensionContext,
-		private readonly _interactionSettings: InteractionSettings
+		private readonly _context: vscode.ExtensionContext
 	) {}
 
 	dispose() {
@@ -128,12 +126,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 		let { document, selection } = editor;
 		let tutorial: string = "";
 		Parser.init().then(async() => {
-			console.log(vscode.Uri.joinPath(this._context.extensionUri, 'out', `tree-sitter-${document.languageId}.wasm`).fsPath);
 			const language = await Parser.Language.load(vscode.Uri.joinPath(this._context.extensionUri, 'out', `tree-sitter-${document.languageId}.wasm`).fsPath);
 			const parser = new Parser;
 			parser.setLanguage(language);
 			let tree = parser.parse(editor.document.getText(selection));
-			tutorial = check(tree);
+			tutorial = check(tree, false);
 			console.log(tutorial);
 			
 			await this.streamParallelizeResponse(
@@ -155,10 +152,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 			return undefined;
 		}
 		let selection = editor.selection;
-		console.log(selection);
 		let code = editor.document.getText(selection)
-		console.log("code:");
-		console.log(code);
 		if(code === "") {
 			webviewView.webview.postMessage({
 				command: "response",
@@ -166,14 +160,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 			});
 		} else {
 			let prompt = "You need to parallelize the following C code using OpenMP:\n\`\`\`\n" + editor.document.getText(selection) + "\n\`\`\`\nHere are some parallelizing experiences:\n";
-			//let prompt = "You need to parallelize the following C code using OpenMP:\n\`\`\`\n" + editor.document.getText(selection) + "\n\`\`\`\n";
-			//1
 			var response = "";
 			if(tutorial !== "false") {
+				console.log(tutorial);
 				response = await this._aiProvider.parallelize(prompt, tutorial, abortController.signal);
-				//response = await this._aiProvider.parallelize(prompt, "", abortController.signal);
 			} else {
-				response = await this._aiProvider.parallelize(prompt, "", abortController.signal);
 				response = "Sorry, we can not parallelize this loop.";
 			}
 

@@ -2,10 +2,9 @@ import * as vscode from "vscode";
 import { eventEmitter } from "../../events/eventEmitter";
 import { loggingProvider } from "../../providers/loggingProvider";
 import { OllamaAIModel } from "./types";
-import { InteractionSettings, Settings } from "../../types/Settings";
+import { Settings } from "../../types/Settings";
 import { asyncIterator } from "../asyncIterator";
-import { AIProvider, GetInteractionSettings } from "../base";
-import { delay } from "../delay";
+import { AIProvider } from "../base";
 import {
 	OllamaRequest,
 	OllamaResponse,
@@ -20,7 +19,6 @@ export class Ollama implements AIProvider {
 	settings: Settings["ollama"];
 	chatHistory: OllamaChatMessage[] = [];
 	chatModel: OllamaAIModel | undefined;
-	interactionSettings: InteractionSettings | undefined;
 
 	constructor() {
 		const config = vscode.workspace.getConfiguration("VscOMP");
@@ -44,15 +42,12 @@ export class Ollama implements AIProvider {
 
 		this.settings = ollamaConfig;
 
-		this.interactionSettings = GetInteractionSettings();
-
 		this.validateSettings();
 	}
 
 	private handleError(message: string) {
 		vscode.window.showErrorMessage(message);
 		loggingProvider.logError(message);
-		//eventEmitter._onFatalError.fire();
 	}
 
 	private async validateSettings() {
@@ -254,7 +249,7 @@ ${ragContent}`,
 			stream: true,
 			messages,
 			options: {
-				num_predict: this.interactionSettings?.chatMaxTokens ?? -1,
+				num_predict: -1,
 				temperature: 0.4,
 				top_k: 30,
 				top_p: 0.2,
@@ -293,11 +288,7 @@ ${ragContent}`,
 		ragContent: string,
 		signal: AbortSignal
 	): Promise<string> {
-		//1
 		let systemPrompt = commonParallelizePrompt;
-
-		//2
-		//let systemPrompt = "Below is an instruction that describes a task. Write a response that appropriately completes the request.";
 		if (ragContent) {
 			prompt += ragContent;
 		}
@@ -308,7 +299,7 @@ ${ragContent}`,
 			system: systemPrompt,
 			stream: false,
 			options: {
-				num_predict: this.interactionSettings?.chatMaxTokens ?? -1,
+				num_predict: -1,
 				temperature: 0.4,
 				top_k: 20,
 				top_p: 0.2,

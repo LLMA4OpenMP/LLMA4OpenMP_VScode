@@ -5,12 +5,6 @@ interface BaseServiceSettings {
 	baseUrl: string;
 }
 
-export interface InteractionSettings {
-	codeMaxTokens: number;
-	chatContextWindow: number;
-	chatMaxTokens: number;
-}
-
 const AiProviders = ["Ollama", "OpenAI"] as const;
 export const AiProvidersList: string[] = [...AiProviders];
 
@@ -38,7 +32,6 @@ export const defaultOpenAISettings: ApiSettingsType = {
 
 export interface Settings {
 	aiProvider: (typeof AiProviders)[number];
-	interactionSettings: InteractionSettings;
 	ollama?: OllamaSettingsType;
 	openai?: ApiSettingsType;
 }

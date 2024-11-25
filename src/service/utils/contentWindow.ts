@@ -10,7 +10,6 @@ export const getContentWindow = (document: TextDocument, position: Position, win
   let top = current;
   let bottom = current;
 
-  // every 3 chars we add a new token to the token count
   let letCurrentChatToTokenCount = 0;
   while (tokenCount < length && (top > -1 || bottom < text.length)) {
     if (top > -1) {

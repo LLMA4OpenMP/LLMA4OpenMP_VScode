@@ -1,11 +1,9 @@
 import * as vscode from "vscode";
 import { ChatViewProvider } from "./providers/chatViewProvider.js";
 import { ConfigViewProvider } from "./providers/configViewProvider.js";
-import { RefactorProvider } from "./providers/refactorProvider.js";
 import { ActivityStatusBar } from "./providers/statusBarProvider.js";
 import {
 	GetAllSettings,
-	GetInteractionSettings,
 	GetProviderFromSettings,
 } from "./service/base.js";
 
@@ -13,7 +11,6 @@ let statusBarProvider: ActivityStatusBar;
 
 export async function activate(context: vscode.ExtensionContext) {
 	const aiProvider = GetProviderFromSettings();
-	const interactionSettings = GetInteractionSettings();
 
 	statusBarProvider = new ActivityStatusBar();
 
@@ -35,31 +32,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand(
-			RefactorProvider.command,
-			RefactorProvider.refactorCode
-		)
-	);
-
-	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(
 			ChatViewProvider.viewType,
-			new ChatViewProvider(aiProvider, context, interactionSettings),
+			new ChatViewProvider(aiProvider, context),
 			{
 				webviewOptions: {
 					retainContextWhenHidden: true,
 				},
-			}
-		)
-	);
-
-	context.subscriptions.push(
-		vscode.languages.registerCodeActionsProvider(
-			RefactorProvider.selector,
-			new RefactorProvider(aiProvider),
-			{
-				providedCodeActionKinds:
-					RefactorProvider.providedCodeActionKinds,
 			}
 		)
 	);
