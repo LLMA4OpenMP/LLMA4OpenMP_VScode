@@ -2,12 +2,11 @@ import Parser from "web-tree-sitter";
 import {
     nestedPrompt,
     privatePrompt,
-    dependencyPrompt,
     conditionalPrompt,
     reductionPrompt,
     iterPrompt,
     updatePrompt
-} from "../service/common"
+} from "../service/common";
 
 interface tab {
     [key: string]: any;
@@ -22,7 +21,7 @@ interface Status {
     indexx: string;
     errmsg: string;
 }
- 
+
 let status: Status = {
     nested: false,
     private: false,
@@ -33,8 +32,8 @@ let status: Status = {
     errmsg: "This loop is not parallelizable!\n"
 };
 
-let experiences = ""
-let par = false;
+let experiences = "";
+let function_call = false;
 
 let assigned: tab = {
     name: [],
@@ -60,14 +59,14 @@ let no_reduction: tab = {
     depth: []
 }
 
-export function check(tree: any): string {
+export function check(tree: any, call: boolean): string {
     init();
     let text_selection = tree.rootNode.text;
     if (text_selection.indexOf("printf") !== -1 || text_selection.indexOf("scanf") !== -1) {
         err("IO!")
         return 'false'
     }
-
+    function_call = call;
     let head = tree.rootNode.namedChild(0);
     status.indexx = head.namedChild(2).namedChild(0).text;
     if (head.namedChild(3).grammarType === "compound_statement") {
@@ -83,18 +82,11 @@ export function check(tree: any): string {
             if (experiences === "") {
                 experiences = "No experience matched, maybe you should just apply \"#pragma omp parallel for\" to the loop.";
             }
-            test();
+            //test();
             return experiences;
-            // if (par) {
-            //     return experiences;
-            // }
-            // else {
-            //     err("Assignment only!");
-            //     return 'false';
-            // }
         }
         else {
-            test();
+            //test();
             return 'false';
         }
     }
@@ -111,18 +103,9 @@ export function check(tree: any): string {
             if (experiences === "") {
                 experiences = "No experience matched, maybe you should just apply \"#pragma omp parallel for\" to the loop.";
             }
-            test();
             return experiences;
-            // if (par) {
-            //     return experiences;
-            // }
-            // else {
-            //     err("Assignment only!");
-            //     return 'false';
-            // }
         }
         else {
-            test();
             return 'false';
         }
     }
@@ -145,7 +128,7 @@ function compound_handle(node: any, depth: number): boolean {
                 flag = condition_handle(tmp.namedChild(0), depth)
             }
             else if (tmp.namedChild(0).grammarType === "call_expression") {
-                flag = call_handle(tmp.namedChild(0), depth)
+                flag = function_call && call_handle(tmp.namedChild(0), depth);
             }
             else if (tmp.namedChild(0).grammarType === "update_expression") {
                 flag = PnR(tmp.namedChild(0).namedChild(0).text, tmp.namedChild(0).namedChild(0).text, "null", -1)
@@ -214,7 +197,7 @@ function statement_handle(node: any, depth: number): boolean {
             flag = condition_handle(tmp.namedChild(0), depth)
         }
         else if (tmp.namedChild(0).grammarType === "call_expression") {
-            flag = call_handle(tmp.namedChild(0), depth)
+            flag = function_call && call_handle(tmp.namedChild(0), depth)
         }
         else if (tmp.namedChild(0).grammarType === "update_expression") {
             flag = PnR(tmp.namedChild(0).namedChild(0).text, tmp.namedChild(0).namedChild(0).text, "null", -1)
@@ -364,7 +347,7 @@ function assign_handle(node: any, depth: number): boolean {
         flag2 = condition_handle(r_node, depth)
     }
     else if (r_node.grammarType == "call_expression") {
-        flag2 = call_handle(r_node, depth)
+        flag2 = function_call && call_handle(r_node, depth)
     }
     else {
         err("Assignment type not found!");
@@ -419,7 +402,6 @@ function subscript_handle(node: any, depth: number, table: tab): boolean {
 }
 
 function binary_handle(node: any, depth: number): boolean {
-    par = true;
     let flag1 = true;
     let flag2 = true;
     let l_node = node.namedChild(0);
@@ -527,7 +509,6 @@ function if_handle(node: any, depth: number): boolean {
 }
 
 function call_handle(node: any, depth: number): boolean {
-    par = true;
     let tmp = node.namedChild(1);
     let flag = true;
     for (let i = 0; i < tmp.namedChildCount; i++) {
@@ -608,7 +589,7 @@ function PnR(l_node: any, r_node: any, index: any, depth: number): boolean {
             experiences = experiences + privatePrompt;
         }
     }
-//text-----------------------------------------
+
     if (!(find(no_reduction, l_node, "null", -1) || find(assigned, l_node, "null", -1))) {
         if (r_node.indexOf(l_node) !== -1) {
             if (del(l_node)) {
@@ -671,55 +652,6 @@ function changed(index: any, depth: number): boolean {
     return flag;
 }
 
-function test() {
-    console.log(status["errmsg"]);
-    for (let i = 0; i < assigned["name"].length; i++) {
-        if (assigned["index"][i] === "null") {
-            console.log("variable: " + assigned["name"][i]);
-        }
-        else {
-            //=2
-            console.log("variable: " + assigned["name"][i]);
-            for (let j = 1; j < assigned["index"][i].length; j++) {
-                console.log("[");
-                console.log(assigned["index"][i][j].text);
-                console.log("]");
-            }
-            console.log("\n");
-        }
-    }
-    console.log("//////////////////////////////////////////////-");
-    //=1
-    for (let i = 0; i < queried["name"].length; i++) {
-        if (queried["index"][i] === "null") {
-            console.log("variable: " + queried["name"][i]);
-        }
-        else {
-            console.log("variable: " + queried["name"][i]);
-            //=2
-            for (let j = 1; j < queried["index"][i].length; j++) {
-                console.log("[");
-                console.log(queried["index"][i][j].text);
-                console.log("]");
-            }
-            console.log("\n");
-        }
-    }
-    console.log("//////////////////////////////////////////////-");
-    if (status.private) {
-        console.log("private");
-    }
-    if (status.reduction) {
-        console.log("reduction");
-    }
-    if (status.nested) {
-        console.log("nested");
-    }
-    if (status.conditional) {
-        console.log("conditional");
-    }
-}
-
 function init() {
     status["nested"] = false;
     status["private"] = false;
@@ -729,7 +661,7 @@ function init() {
     status["indexx"] = "";
     status["errmsg"] = "This loop is not parallelizable!\n";
     experiences = "";
-    par = true;
+    function_call = false;
     assigned = { name: [], index: [], depth: [] };
     queried = { name: [], index: [], depth: [] };
     reduction_count = { name: [], index: [], depth: [] };
@@ -758,9 +690,6 @@ function diff(A: any, B: any) {
 }
 
 function sub_check() {
-    //=1
-    console.log(assigned);
-    console.log(queried);
     for (let i = 0; i < assigned["name"].length; i++) {
         if (assigned["index"][i] !== "null") {
             for (let j = 0; j < queried["name"].length; j++) {

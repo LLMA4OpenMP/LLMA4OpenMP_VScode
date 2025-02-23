@@ -2,7 +2,7 @@
 	"name": "vscomp",
 	"displayName": "VscOMP",
 	"description": "VscOMP - AI powered assistant to help you parallelize your code.",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"publisher": "VscOMP",
 	"license": "MIT",
 	"authors": [
@@ -26,7 +26,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/LLMA4OpenMP/LLMA4OpenMP"
+		"url": "https://github.com/LLMA4OpenMP/LLMA4OpenMP_VScode"
 	},
 	"engines": {
 		"vscode": "^1.87.0"
