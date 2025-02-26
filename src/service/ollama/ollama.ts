@@ -300,7 +300,7 @@ ${ragContent}`,
 			stream: false,
 			options: {
 				num_predict: -1,
-				temperature: 0.4,
+				temperature: 0.2,
 				top_k: 20,
 				top_p: 0.2,
 				repeat_penalty: 1.1,

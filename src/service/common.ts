@@ -32,8 +32,11 @@ for(i = 0; i < 100; i++) {
     }
 }
 
-//nested loops 2
-//this loop can also be paralleized using collapse, because its iteration space is rectangular. You must avoid using collapse when loops do not form a perfectly nested rectangular iteration space (e.g., inner bounds depend on outer variables) or have dependencies/interleaved code.
+//nested loops 2 (how to use collapse)
+//you can use collapse to merge several perfectly nested loops
+//you must avoid using collapse when loops do not form a rectangular iteration space (e.g., inner bounds are related to outer variables) or have interleaved code.
+//you need to check the starting and ending point of the loop bounds to see if it relates outer variables. if inner bounds do relate to outer loop index (like j = 0; j < i; j++), using collapse would create a rectangular hull, you must avoid that
+//In this case, both inner loop's indexes do not relate to outer loop's indexes (j from 0 to 1000, k from 0 to N, irrelevant to i)
 //since collapse() automatically privatize loop indexes, you can replace private(j, k) with collapse(3), because collapse(3) covers 3 loops, i, j, and k, thus i, j, and k are privatized
 //moreover, you don't have to collapse all the loops, collapse(2) is also viable. But becareful, if you DO NOT choose to collapse ALL LOOPS, the remaining loop's index must be explicitly privatized to avoid concurrent writes to the loop index between iterations.
 //so all these three pragmas are correct 

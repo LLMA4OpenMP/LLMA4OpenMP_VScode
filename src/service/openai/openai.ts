@@ -151,7 +151,7 @@ export class OpenAI implements AIProvider {
 				},
 			],
 			stream: true,
-			temperature: 0.8,
+			temperature: 0.2,
 		};
 
 		loggingProvider.logInfo(
